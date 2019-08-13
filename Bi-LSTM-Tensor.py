@@ -55,14 +55,10 @@ print(len(target_batch), target_batch[0].shape)
 # outputs : [batch_size, len_seq, n_hidden], states : [batch_size, n_hidden]
 outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell,lstm_bw_cell, X, dtype=tf.float32)
 
-init = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init)
-
 #print(outputs.shape)
-ooo =  sess.run([outputs], feed_dict={X: input_batch})
-print(' ::: ', ooo[0][0].shape, ooo[0][1].shape)
-exit()
+#ooo =  sess.run([outputs], feed_dict={X: input_batch})
+#print(' ::: ', ooo[0][0].shape, ooo[0][1].shape)
+#exit()
 
 outputs = tf.concat([outputs[0], outputs[1]], 2) # output[0] : lstm_fw, output[1] : lstm_bw
 outputs = tf.transpose(outputs, [1, 0, 2]) # [n_step, batch_size, n_hidden]
@@ -74,6 +70,10 @@ cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=model, l
 optimizer = tf.train.AdamOptimizer(0.001).minimize(cost)
 
 prediction = tf.cast(tf.argmax(model, 1), tf.int32)
+
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
 
 # Training
 for epoch in range(10000):
