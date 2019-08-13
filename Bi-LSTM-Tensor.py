@@ -16,7 +16,7 @@ sentence = (
 word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
 number_dict = {i: w for i, w in enumerate(list(set(sentence.split())))}
 n_class = len(word_dict)
-n_step = len(sentence.split())     # 改成5就出错
+n_step = 5 #len(sentence.split())     # 改成5就出错
 n_hidden = 5
 
 def make_batch(sentence):
@@ -25,8 +25,11 @@ def make_batch(sentence):
 
     words = sentence.split()
     for i, word in enumerate(words[:-1]):
-        input = [word_dict[n] for n in words[:(i + 1)]]
-        input = input + [0] * (n_step - len(input))
+        if i < n_step-1:
+            input = [word_dict[n] for n in words[:(i + 1)]]
+            input = input + [0] * (n_step - len(input))
+        else:
+            input = [word_dict[n] for n in words[(i+1-n_step):(i+1)]]
         target = word_dict[words[i + 1]]
         input_batch.append(np.eye(n_class)[input])
         target_batch.append(np.eye(n_class)[target])
@@ -49,16 +52,17 @@ input_batch, target_batch = make_batch(sentence)
 print(len(input_batch), input_batch[0].shape)
 print(len(target_batch), target_batch[0].shape)
 
+# outputs : [batch_size, len_seq, n_hidden], states : [batch_size, n_hidden]
+outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell,lstm_bw_cell, X, dtype=tf.float32)
+
 init = tf.global_variables_initializer()
 sess = tf.Session()
 sess.run(init)
 
-
-# outputs : [batch_size, len_seq, n_hidden], states : [batch_size, n_hidden]
-outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell,lstm_bw_cell, X, dtype=tf.float32)
 #print(outputs.shape)
-#ooo =  sess.run([outputs], feed_dict={X: input_batch})
-#print(' ::: ', ooo.shape)
+ooo =  sess.run([outputs], feed_dict={X: input_batch})
+print(' ::: ', ooo[0][0].shape, ooo[0][1].shape)
+exit()
 
 outputs = tf.concat([outputs[0], outputs[1]], 2) # output[0] : lstm_fw, output[1] : lstm_bw
 outputs = tf.transpose(outputs, [1, 0, 2]) # [n_step, batch_size, n_hidden]
