@@ -8,15 +8,15 @@ tf.reset_default_graph()
 
 sentence = (
     'The morning had dawned clear and cold with a crispness that hinted at the end of summer They '
-	'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
-	'excitement This was the first time he had been deemed old enough to go with his lord father and his '
-	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
+	#'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
+	#'excitement This was the first time he had been deemed old enough to go with his lord father and his '
+	#'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
 ) # 就是1句，1个str
 
 word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
 number_dict = {i: w for i, w in enumerate(list(set(sentence.split())))}
 n_class = len(word_dict)
-n_step = 3   #len(sentence.split())
+n_step = len(sentence.split())     # 改成5就出错
 n_hidden = 5
 
 def make_batch(sentence):
@@ -36,15 +36,29 @@ def make_batch(sentence):
 # Bi-LSTM Model
 X = tf.placeholder(tf.float32, [None, n_step, n_class])
 Y = tf.placeholder(tf.float32, [None, n_class])
+print(X.shape)
 
 W = tf.Variable(tf.random_normal([n_hidden * 2, n_class]))
 b = tf.Variable(tf.random_normal([n_class]))
+print(W.shape)
 
 lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(n_hidden)
 lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(n_hidden)
 
+input_batch, target_batch = make_batch(sentence)
+print(len(input_batch), input_batch[0].shape)
+print(len(target_batch), target_batch[0].shape)
+
+init = tf.global_variables_initializer()
+sess = tf.Session()
+sess.run(init)
+
+
 # outputs : [batch_size, len_seq, n_hidden], states : [batch_size, n_hidden]
 outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell,lstm_bw_cell, X, dtype=tf.float32)
+#print(outputs.shape)
+#ooo =  sess.run([outputs], feed_dict={X: input_batch})
+#print(' ::: ', ooo.shape)
 
 outputs = tf.concat([outputs[0], outputs[1]], 2) # output[0] : lstm_fw, output[1] : lstm_bw
 outputs = tf.transpose(outputs, [1, 0, 2]) # [n_step, batch_size, n_hidden]
@@ -58,12 +72,6 @@ optimizer = tf.train.AdamOptimizer(0.001).minimize(cost)
 prediction = tf.cast(tf.argmax(model, 1), tf.int32)
 
 # Training
-init = tf.global_variables_initializer()
-sess = tf.Session()
-sess.run(init)
-
-input_batch, target_batch = make_batch(sentence)
-
 for epoch in range(10000):
     _, loss = sess.run([optimizer, cost], feed_dict={X: input_batch, Y: target_batch})
     if (epoch + 1)%1000 == 0:
