@@ -8,9 +8,9 @@ tf.reset_default_graph()
 
 sentence = (
     'The morning had dawned clear and cold with a crispness that hinted at the end of summer They '
-	#'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
-	#'excitement This was the first time he had been deemed old enough to go with his lord father and his '
-	#'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
+	'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
+	'excitement This was the first time he had been deemed old enough to go with his lord father and his '
+	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
 ) # 就是1句，1个str
 
 word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
@@ -33,17 +33,16 @@ def make_batch(sentence):
         target = word_dict[words[i + 1]]
         input_batch.append(np.eye(n_class)[input])
         target_batch.append(np.eye(n_class)[target])
-
     return input_batch, target_batch
 
 # Bi-LSTM Model
 X = tf.placeholder(tf.float32, [None, n_step, n_class])
 Y = tf.placeholder(tf.float32, [None, n_class])
-print(X.shape)
+#print(X.shape)
 
 W = tf.Variable(tf.random_normal([n_hidden * 2, n_class]))
 b = tf.Variable(tf.random_normal([n_class]))
-print(W.shape)
+#print(W.shape)
 
 lstm_fw_cell = tf.nn.rnn_cell.LSTMCell(n_hidden)
 lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(n_hidden)
@@ -51,6 +50,7 @@ lstm_bw_cell = tf.nn.rnn_cell.LSTMCell(n_hidden)
 input_batch, target_batch = make_batch(sentence)
 print(len(input_batch), input_batch[0].shape)
 print(len(target_batch), target_batch[0].shape)
+
 
 # outputs : [batch_size, len_seq, n_hidden], states : [batch_size, n_hidden]
 outputs, _ = tf.nn.bidirectional_dynamic_rnn(lstm_fw_cell,lstm_bw_cell, X, dtype=tf.float32)
