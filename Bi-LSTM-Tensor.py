@@ -7,15 +7,16 @@ import numpy as np
 tf.reset_default_graph()
 
 sentence = (
-    'Lorem ipsum dolor sit amet consectetur adipisicing elit '
-    'sed do eiusmod tempor incididunt ut labore et dolore magna '
-    'aliqua Ut enim ad minim veniam quis nostrud exercitation'
+    'The morning had dawned clear and cold with a crispness that hinted at the end of summer They '
+	'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
+	'excitement This was the first time he had been deemed old enough to go with his lord father and his '
+	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
 ) # 就是1句，1个str
 
 word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
 number_dict = {i: w for i, w in enumerate(list(set(sentence.split())))}
 n_class = len(word_dict)
-n_step = len(sentence.split())
+n_step = 3   #len(sentence.split())
 n_hidden = 5
 
 def make_batch(sentence):
