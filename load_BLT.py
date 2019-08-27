@@ -8,8 +8,10 @@ sentence = (
 	'excitement This was the first time he had been deemed old enough to go with his lord father and his '
 	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
 ) # 就是1句，1个str
-word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
-number_dict = {i: w for i, w in enumerate(list(set(sentence.split())))}
+dict_list = list(set(sentence.split()))
+dict_list.sort()
+word_dict = {w: i for i, w in enumerate(dict_list)}
+number_dict = {i: w for i, w in enumerate(dict_list)}
 n_class = len(word_dict)
 n_step = 5 #len(sentence.split())
 n_hidden = 5
@@ -30,7 +32,7 @@ def make_batch(sentence):
 		target_batch.append(np.eye(n_class)[target])
 	return input_batch, target_batch
 
-X = tf.placeholder(tf.float32, [None, n_step, n_class])
+#X = tf.placeholder(tf.float32, [None, n_step, n_class])
 input_batch, target_batch = make_batch(sentence)
 print(len(input_batch), input_batch[0].shape)
 print(len(target_batch), target_batch[0].shape)

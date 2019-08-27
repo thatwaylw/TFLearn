@@ -13,8 +13,10 @@ sentence = (
 	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
 ) # 就是1句，1个str
 
-word_dict = {w: i for i, w in enumerate(list(set(sentence.split())))}
-number_dict = {i: w for i, w in enumerate(list(set(sentence.split())))}
+dict_list = list(set(sentence.split()))
+dict_list.sort()
+word_dict = {w: i for i, w in enumerate(dict_list)}
+number_dict = {i: w for i, w in enumerate(dict_list)}
 n_class = len(word_dict)
 n_step = 5 #len(sentence.split())
 n_hidden = 5
