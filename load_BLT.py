@@ -1,20 +1,27 @@
 #coding=utf-8
 import tensorflow as tf
 import numpy as np
+
 tf.reset_default_graph()
+
+with open( 'data/en1.txt', 'r') as f:
+	sentence = f.read()
+
+'''
 sentence = (
 	'The morning had dawned clear and cold with a crispness that hinted at the end of summer They '
 	'set forth at daybreak to see a man beheaded twenty in all and Bran rode among them nervous with '
 	'excitement This was the first time he had been deemed old enough to go with his lord father and his '
 	'brothers to see the king’s justice done It was the ninth year of summer and the seventh of Bran’s life'
-) # 就是1句，1个str
+) # 就是1句，1个str'''
 dict_list = list(set(sentence.split()))
 dict_list.sort()
 word_dict = {w: i for i, w in enumerate(dict_list)}
 number_dict = {i: w for i, w in enumerate(dict_list)}
 n_class = len(word_dict)
-n_step = 5 #len(sentence.split())
+n_step = 50 #len(sentence.split())
 n_hidden = 5
+print(word_dict)
 
 def make_batch(sentence):
 	input_batch = []
