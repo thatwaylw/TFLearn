@@ -5,7 +5,7 @@ import numpy as np
 
 tf.reset_default_graph()
 
-with open( 'data/en1.txt', 'r') as f:
+with open( 'data/en0.txt', 'r') as f:
 	sentence = f.read()
 
 '''	
@@ -23,7 +23,7 @@ number_dict = {i: w for i, w in enumerate(dict_list)}
 n_class = len(word_dict)
 n_step = 5 #len(sentence.split())
 n_hidden = 5
-batch_size = 50 # 100 words per batch
+batch_size = 50 # xx words per batch
 data_len = len(sentence.split())
 batch_num = data_len // batch_size	#最后丢了一点数据
 print(batch_size, data_len, batch_num)
@@ -92,7 +92,7 @@ with tf.Session() as sess:
 		for epoch in range(5000):
 			_, loss = sess.run([optimizer, cost], feed_dict={X: input_batch, Y: target_batch})
 			if (epoch + 1)%1000 == 0:
-				saver.save(sess, 'models/en_got', 1000)
+				saver.save(sess, 'models/en_0', 1000)
 				print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
 
 	predict =  sess.run([prediction], feed_dict={X: input_batch0})

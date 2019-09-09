@@ -4,7 +4,7 @@ import numpy as np
 
 tf.reset_default_graph()
 
-with open( 'data/en1.txt', 'r') as f:
+with open( 'data/en0.txt', 'r') as f:
 	sentence = f.read()
 
 '''
@@ -19,15 +19,18 @@ dict_list.sort()
 word_dict = {w: i for i, w in enumerate(dict_list)}
 number_dict = {i: w for i, w in enumerate(dict_list)}
 n_class = len(word_dict)
-n_step = 50 #len(sentence.split())
+n_step = 5 #len(sentence.split())
 n_hidden = 5
-print(word_dict)
+batch_size = 50 # xx words per batch
+data_len = len(sentence.split())
+batch_num = data_len // batch_size	#最后丢了一点数据
+print('len(word_dict)=', n_class)
 
-def make_batch(sentence):
+def make_batch(sentence, bi):
 	input_batch = []
 	target_batch = []
 
-	words = sentence.split()
+	words = sentence.split()[bi*batch_size:(bi+1)*batch_size]
 	for i, word in enumerate(words[:-1]):
 		if i < n_step-1:
 			input = [word_dict[n] for n in words[:(i + 1)]]
@@ -38,14 +41,14 @@ def make_batch(sentence):
 		input_batch.append(np.eye(n_class)[input])
 		target_batch.append(np.eye(n_class)[target])
 	return input_batch, target_batch
-
+	
 #X = tf.placeholder(tf.float32, [None, n_step, n_class])
-input_batch, target_batch = make_batch(sentence)
+input_batch, target_batch = make_batch(sentence, 0)
 print(len(input_batch), input_batch[0].shape)
 print(len(target_batch), target_batch[0].shape)
 
 with tf.Session() as sess:
-	saver = tf.train.import_meta_graph('models/ckp-1000.meta')
+	saver = tf.train.import_meta_graph('models/en_got-1000.meta')
 	saver.restore(sess, tf.train.latest_checkpoint('models'))
 	graph = tf.get_default_graph()
 	X = graph.get_tensor_by_name('xx:0')
