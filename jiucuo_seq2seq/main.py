@@ -8,68 +8,35 @@ from tensorflow.python.layers.core import Dense
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.1'), 'Please use TensorFlow version 1.1 or newer'
 print('TensorFlow Version: {}'.format(tf.__version__))
+
 import numpy as np
-import time
-import tensorflow as tf
-import io
-
-with io.open('./data/tencent_chat_q_c.txt', 'r', encoding='utf-8') as f:
-    source_data = f.read()
-
-with io.open('./data/tencent_chat_a_c.txt', 'r', encoding='utf-8') as f:
-    target_data = f.read()
+import datapro as dp
 
 
-def extract_character_vocab(data):
-    # 构造映射表
-    vocab_to_int = dict()
-    # 这里要把四个特殊字符添加进词典
-    vocab_to_int['<PAD>'] = 0
-    vocab_to_int['<UNK>'] = 1
-    vocab_to_int['<GO>']  = 2
-    vocab_to_int['<EOS>'] = 3
-    idx = 4
-    for line in data.split('\n'):
-        for character in line:
-            if character not in vocab_to_int:
-                vocab_to_int[character] = idx
-                idx += 1
-    #int_to_vocab = {idx: word for idx, word in enumerate(special_words + set_words)}
-    int_to_vocab = {idx: word for word, idx in vocab_to_int.items()}
+train_fn = './data/tencent_chat.txt'
 
-    return int_to_vocab, vocab_to_int
-'''
-def extract_character_vocab(data):
-    # 构造映射表
-    special_words = ['<PAD>', '<UNK>', '<GO>',  '<EOS>']
+checkpoint = "./model/temp.ckpt"
 
-    set_words = list(set([character for line in data.split('\n') for character in line]))
-    # 这里要把四个特殊字符添加进词典
-    int_to_vocab = {idx: word for idx, word in enumerate(special_words + set_words)}
-    vocab_to_int = {word: idx for idx, word in int_to_vocab.items()}
 
-    return int_to_vocab, vocab_to_int
-'''
+# 读入训练数据
+print('* & ^ % $ # @ ! 读入训练数据...')
+source_data, target_data = dp.read_data(train_fn)
+for lin1, lin2 in zip(source_data[:10], target_data[:10]):    print(lin1,'\t',lin2)
+print('...\n共 %d 个句对' % len(source_data))
 
 # 构造映射表
-source_int_to_letter, source_letter_to_int = extract_character_vocab(source_data)
-target_int_to_letter, target_letter_to_int = extract_character_vocab(target_data)
-
-def save_vocab(voca_dict, fn):
-    fw = io.open(fn, 'w', encoding='utf-8')
-    for word, idx in voca_dict.items():
-        fw.write('%s\t\t\t%d\n'%(word, idx))
-    fw.close()
-
-save_vocab(source_letter_to_int, './data/src_dict_tencent_chat.txt')
-save_vocab(target_letter_to_int, './data/tgt_dict_tencent_chat.txt')
+source_int_to_letter, source_letter_to_int = dp.extract_character_vocab(source_data)
+target_int_to_letter, target_letter_to_int = dp.extract_character_vocab(target_data)
+#保存字典
+#save_vocab(source_letter_to_int, './data/src_dict_tencent_chat.txt')
+#save_vocab(target_letter_to_int, './data/tgt_dict_tencent_chat.txt')
 
 
 # 对字母进行转换，dict.get(key, default)，如果get不到就返回default = <UNK>的idx值, target每句结尾还加了<EOS>
 source_int = [[source_letter_to_int.get(letter, source_letter_to_int['<UNK>'])
-               for letter in line] for line in source_data.split('\n')]
+               for letter in line] for line in source_data]
 target_int = [[target_letter_to_int.get(letter, target_letter_to_int['<UNK>'])
-               for letter in line] + [target_letter_to_int['<EOS>']] for line in target_data.split('\n')]
+               for letter in line] + [target_letter_to_int['<EOS>']] for line in target_data]
 
 
 def get_inputs():
@@ -224,7 +191,7 @@ def seq2seq_model(input_data, targets, lr, target_sequence_length,
 
 # 超参数
 # Number of Epochs
-epochs = 60
+epochs = 6
 # Batch Size
 batch_size = 128
 # RNN Size
@@ -327,7 +294,6 @@ valid_target = target_int[:batch_size]
 
 display_step = 50  # 每隔50轮输出loss
 
-checkpoint = "./model/tencent_chat3.ckpt"
 with tf.Session(graph=train_graph) as sess:
     sess.run(tf.global_variables_initializer())
 
@@ -367,18 +333,9 @@ with tf.Session(graph=train_graph) as sess:
     saver = tf.train.Saver()
     saver.save(sess, checkpoint)
     print('Model Trained and Saved')
+    
 
-
-def source_to_seq(text):
-    '''
-    对源数据进行转换
-    '''
-#    sequence_length = 7
-    sequence_length = len(text)+1
-    return [source_letter_to_int.get(word, source_letter_to_int['<UNK>']) for word in text] + [source_letter_to_int['<PAD>']]*(sequence_length-len(text))
-
-
-#checkpoint = "./model/tencent_chat3.ckpt"
+# ------------------------- test ------------------------------
 
 loaded_graph = tf.Graph()
 with tf.Session(graph=loaded_graph) as sess:
@@ -392,36 +349,23 @@ with tf.Session(graph=loaded_graph) as sess:
     target_sequence_length = loaded_graph.get_tensor_by_name('target_sequence_length:0')
     pad = source_letter_to_int["<PAD>"]
 
-    input_word = u'你好我爱你'
-    text = source_to_seq(input_word)
 
-    answer_logits = sess.run(logits, {input_data: [text] * batch_size,
-                                      target_sequence_length: [len(input_word)] * batch_size,
-                                      source_sequence_length: [len(input_word)] * batch_size})[0]
-    
-    # 输入一个单词
-    print('原始输入:', input_word)
-    print('\nSource')
-    print('  Word 编号:    {}'.format([i for i in text]))
-    print('  Input Words: {}'.format(" ".join([source_int_to_letter[i] for i in text])))
-    print('\nTarget')
-    print('  Word 编号:       {}'.format([i for i in answer_logits if i != pad]))
-    print('  Response Words: {}'.format(" ".join([target_int_to_letter[i] for i in answer_logits if i != pad])))
-
-    with io.open('./data/test_in.txt', 'r', encoding='utf-8') as f:
-        testin_data = f.read()
-    for input_word in testin_data.split('\n'):
-        text = source_to_seq(input_word)
+    with open('./data/test_some.txt', 'r', encoding='utf-8') as f:
+        testin_data = f.read().split('\n')
+        testin_data.append(u'你好我爱你')
+        
+    for input_word in testin_data:
+        text = dp.source_to_seq(input_word, source_letter_to_int)
 
         answer_logits = sess.run(logits, {input_data: [text] * batch_size,
                                           target_sequence_length: [len(input_word)] * batch_size,
                                           source_sequence_length: [len(input_word)] * batch_size})[0]
         
         # 输入一个单词
-        print('原始输入:', input_word)
-        print('\nSource')
+        print('\n原始输入:', input_word)
+        print('Source')
         print('  Word 编号:    {}'.format([i for i in text]))
         print('  Input Words: {}'.format(" ".join([source_int_to_letter[i] for i in text])))
-        print('\nTarget')
+        print('Target')
         print('  Word 编号:       {}'.format([i for i in answer_logits if i != pad]))
         print('  Response Words: {}'.format(" ".join([target_int_to_letter[i] for i in answer_logits if i != pad])))
